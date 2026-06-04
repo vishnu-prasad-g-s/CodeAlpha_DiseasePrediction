@@ -21,6 +21,7 @@ Predict the possibility of **heart disease** in a patient based on clinical feat
 |---|---|
 | **Name** | Heart Disease Dataset |
 | **Source** | [Kaggle — johnsmith88/heart-disease-dataset](https://www.kaggle.com/datasets/johnsmith88/heart-disease-dataset) |
+| **Kaggle Path** | `/kaggle/input/datasets/johnsmith88/heart-disease-dataset/heart.csv` |
 | **Rows** | 303 patients |
 | **Features** | 13 clinical features |
 | **Target** | `target` — 0 (no disease), 1 (disease) |
@@ -54,32 +55,34 @@ Raw Data → EDA → Preprocessing → Train/Test Split → Model Training → E
 ```
 
 ### 1. Exploratory Data Analysis (EDA)
-- Shape, dtypes, missing value check
-- Feature distributions (histograms)
-- Correlation heatmap
-- Class balance check
+- Dataset shape, first 5 rows (`df.head()`)
+- Missing value check (`df.isnull().sum()`)
+- Class balance check (`df['target'].value_counts()`)
+- Feature distributions — histograms (`df.hist()`)
+- Correlation heatmap (`sns.heatmap` with `coolwarm` palette)
+- Class balance bar chart (`sns.countplot`)
 
 ### 2. Preprocessing
 - No missing values in this dataset
+- Features split: `X = df.drop('target', axis=1)`, `y = df['target']`
+- Train/test split: **80% train / 20% test** (`random_state=42`)
 - `StandardScaler` applied for Logistic Regression and SVM
-- Train/test split: 80% train, 20% test (`random_state=42`)
+- Tree-based models (Random Forest, XGBoost) use unscaled data
 
 ### 3. Models Trained
 
-| Model | Notes |
-|---|---|
-| Logistic Regression | Baseline linear classifier |
-| Random Forest | Ensemble of 100 decision trees |
-| Support Vector Machine | RBF kernel |
-| XGBoost | Gradient boosted trees — best performer |
+| Model | Scaling | Key Parameters |
+|---|---|---|
+| Logistic Regression | ✅ Yes | `max_iter=1000` |
+| Random Forest | ❌ No | `n_estimators=100`, `random_state=42` |
+| SVM | ✅ Yes | `kernel='rbf'`, `probability=True` |
+| XGBoost | ❌ No | `n_estimators=100`, `learning_rate=0.1`, `eval_metric='logloss'` |
 
-### 4. Evaluation Metrics
-- Accuracy
-- F1-Score
-- ROC-AUC
-- Confusion Matrix
-- ROC Curve
-- Feature Importance (Random Forest)
+### 4. Evaluation
+- **Metrics:** Accuracy, F1-Score, ROC-AUC (all 4 models compared)
+- **Confusion Matrix** — XGBoost best model (`ConfusionMatrixDisplay`)
+- **ROC Curve** — XGBoost best model (`RocCurveDisplay`)
+- **Feature Importance** — Random Forest (`feature_importances_`, horizontal bar chart)
 
 ---
 
@@ -101,9 +104,8 @@ Raw Data → EDA → Preprocessing → Train/Test Split → Model Training → E
 ```
 CodeAlpha_DiseasePrediction/
 │
-├── disease_prediction.ipynb   # Main Kaggle notebook
-├── README.md                  # This file
-└── heart.csv                  # Dataset (or linked from Kaggle)
+├── disease-prediction-codealpha.ipynb   # Main Kaggle notebook
+└── README.md                            # This file
 ```
 
 ---
@@ -112,8 +114,8 @@ CodeAlpha_DiseasePrediction/
 
 ### On Kaggle (recommended)
 1. Open the notebook on Kaggle
-2. Add the Heart Disease dataset via **Add Data**
-3. Click **Run All**
+2. Add the dataset: **johnsmith88/heart-disease-dataset** via **Add Data**
+3. Click **Run All** — all cells run sequentially
 
 ### Locally
 ```bash
@@ -124,28 +126,42 @@ cd CodeAlpha_DiseasePrediction
 # Install dependencies
 pip install pandas numpy matplotlib seaborn scikit-learn xgboost
 
-# Run the notebook
-jupyter notebook disease_prediction.ipynb
+# Launch notebook
+jupyter notebook disease-prediction-codealpha.ipynb
 ```
+
+---
+
+## 📓 Notebook Structure
+
+| Cell | Contents |
+|---|---|
+| Cell 1 | Imports + load dataset + shape/head/null/class balance check |
+| Cell 2 | EDA — histograms, correlation heatmap, class balance plot |
+| Cell 3 | Preprocessing — train/test split + StandardScaler |
+| Cell 4 | Train all 4 models + print Accuracy / F1 / ROC-AUC comparison table |
+| Cell 5 | Confusion matrix + ROC curve (XGBoost) |
+| Cell 6 | Feature importance bar chart (Random Forest) |
 
 ---
 
 ## 🧠 Key Findings
 
 - **`cp` (chest pain type)** and **`thalach` (max heart rate)** are the strongest predictors of heart disease.
-- **`exang` (exercise-induced angina)** and **`oldpeak` (ST depression)** are strongly negatively correlated — higher values indicate lower disease probability.
-- The dataset is well balanced (54/46), so accuracy is a reliable metric here.
-- XGBoost outperforms all other models across every metric.
+- **`exang` (exercise-induced angina)** and **`oldpeak` (ST depression)** are strongly negatively correlated with disease.
+- The dataset is well balanced (54/46), making accuracy a reliable metric.
+- **XGBoost outperforms** all other models across every metric.
+- Random Forest's `feature_importances_` provides interpretable insight into which clinical features drive the prediction.
 
 ---
 
 ## 🛠️ Tech Stack
 
 - **Python 3.8+**
-- **Pandas** — data manipulation
-- **Matplotlib / Seaborn** — visualization
-- **Scikit-learn** — ML models and evaluation
-- **XGBoost** — gradient boosting
+- **Pandas** — data loading and manipulation
+- **Matplotlib / Seaborn** — EDA visualizations
+- **Scikit-learn** — preprocessing, models, evaluation metrics
+- **XGBoost** — gradient boosted classifier
 - **Kaggle Notebooks** — cloud execution environment
 
 ---
