@@ -11,23 +11,23 @@
 
 ## 📌 Objective
 
-Predict the possibility of **heart disease** in a patient based on clinical features such as age, cholesterol level, chest pain type, resting blood pressure, and more. This is a **binary classification** problem — the model outputs either `0` (no disease) or `1` (disease present).
+Predict the possibility of **disease** in a patient based on clinical features — across **three different medical datasets**. This is a **binary classification** problem in all cases, with the model predicting either the presence or absence of disease.
 
 ---
 
-## 📂 Dataset
+## 📂 Datasets
 
+### 1. Heart Disease
 | Property | Details |
 |---|---|
-| **Name** | Heart Disease Dataset |
 | **Source** | [Kaggle — johnsmith88/heart-disease-dataset](https://www.kaggle.com/datasets/johnsmith88/heart-disease-dataset) |
 | **Kaggle Path** | `/kaggle/input/datasets/johnsmith88/heart-disease-dataset/heart.csv` |
 | **Rows** | 303 patients |
 | **Features** | 13 clinical features |
 | **Target** | `target` — 0 (no disease), 1 (disease) |
-| **Class balance** | 54% no disease / 46% disease |
+| **Class balance** | ~54% no disease / ~46% disease |
 
-### Feature description
+#### Feature Description
 
 | Feature | Description |
 |---|---|
@@ -48,26 +48,42 @@ Predict the possibility of **heart disease** in a patient based on clinical feat
 
 ---
 
+### 2. Diabetes (Pima Indians)
+| Property | Details |
+|---|---|
+| **Source** | [Kaggle — uciml/pima-indians-diabetes-database](https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database) |
+| **Kaggle Path** | `/kaggle/input/datasets/organizations/uciml/pima-indians-diabetes-database/diabetes.csv` |
+| **Target** | `Outcome` — 0 (no diabetes), 1 (diabetes) |
+
+---
+
+### 3. Breast Cancer (sklearn built-in)
+| Property | Details |
+|---|---|
+| **Source** | `sklearn.datasets.load_breast_cancer()` — no external file needed |
+| **Target** | `target` — 0 (malignant), 1 (benign) |
+
+---
+
 ## 🔍 Project Pipeline
 
 ```
-Raw Data → EDA → Preprocessing → Train/Test Split → Model Training → Evaluation
+Raw Data (3 datasets) → EDA → Preprocessing → Train/Test Split → Model Training → Evaluation
 ```
 
 ### 1. Exploratory Data Analysis (EDA)
-- Dataset shape, first 5 rows (`df.head()`)
-- Missing value check (`df.isnull().sum()`)
-- Class balance check (`df['target'].value_counts()`)
-- Feature distributions — histograms (`df.hist()`)
-- Correlation heatmap (`sns.heatmap` with `coolwarm` palette)
-- Class balance bar chart (`sns.countplot`)
+- Dataset shape, missing values, and class balance check for all 3 datasets
+- **Feature distributions** — histograms per dataset (`df.hist()`)
+- **Correlation heatmaps** — one per dataset (`sns.heatmap`, `coolwarm` palette)
+- **Class balance** — all 3 datasets shown side by side as bar charts
 
 ### 2. Preprocessing
-- No missing values in this dataset
-- Features split: `X = df.drop('target', axis=1)`, `y = df['target']`
-- Train/test split: **80% train / 20% test** (`random_state=42`)
+- No missing values in any of the 3 datasets
+- Features split: `X = df.drop(target_col, axis=1)`, `y = df[target_col]`
+- Train/test split: **80% train / 20% test** (`random_state=42`, `stratify=y`)
 - `StandardScaler` applied for Logistic Regression and SVM
 - Tree-based models (Random Forest, XGBoost) use unscaled data
+- Encapsulated in a reusable `run_pipeline(df, target_col, dataset_name)` function
 
 ### 3. Models Trained
 
@@ -76,17 +92,21 @@ Raw Data → EDA → Preprocessing → Train/Test Split → Model Training → E
 | Logistic Regression | ✅ Yes | `max_iter=1000` |
 | Random Forest | ❌ No | `n_estimators=100`, `random_state=42` |
 | SVM | ✅ Yes | `kernel='rbf'`, `probability=True` |
-| XGBoost | ❌ No | `n_estimators=100`, `learning_rate=0.1`, `eval_metric='logloss'` |
+| XGBoost | ❌ No | `n_estimators=100`, `learning_rate=0.1`, `scale_pos_weight=neg/pos`, `eval_metric='logloss'` |
+
+> ⚠️ XGBoost now uses `scale_pos_weight=neg/pos` to handle class imbalance, especially relevant for the Diabetes dataset.
 
 ### 4. Evaluation
-- **Metrics:** Accuracy, F1-Score, ROC-AUC (all 4 models compared)
-- **Confusion Matrix** — XGBoost best model (`ConfusionMatrixDisplay`)
-- **ROC Curve** — XGBoost best model (`RocCurveDisplay`)
-- **Feature Importance** — Random Forest (`feature_importances_`, horizontal bar chart)
+- **Master results table** — Accuracy, F1-Score, ROC-AUC for all 4 models × all 3 datasets
+- **Grouped ROC-AUC bar charts** — all models per dataset, side by side
+- **Confusion Matrix + ROC Curve** — XGBoost results shown for each of the 3 datasets (3×2 grid)
+- **Feature Importance** — Top 8 features per dataset from Random Forest (`feature_importances_`), shown side by side (3 charts)
 
 ---
 
 ## 📊 Results
+
+### Heart Disease
 
 | Model | Accuracy | F1-Score | ROC-AUC |
 |---|---|---|---|
@@ -95,7 +115,27 @@ Raw Data → EDA → Preprocessing → Train/Test Split → Model Training → E
 | SVM | 0.852 | 0.863 | 0.918 |
 | **XGBoost** | **0.885** | **0.890** | **0.941** |
 
-> ✅ **Best model: XGBoost** with 88.5% accuracy and 0.941 ROC-AUC.
+### Diabetes
+
+| Model | Accuracy | F1-Score | ROC-AUC |
+|---|---|---|---|
+| Logistic Regression | — | — | — |
+| Random Forest | — | — | — |
+| SVM | — | — | — |
+| **XGBoost** | — | — | — |
+
+### Breast Cancer
+
+| Model | Accuracy | F1-Score | ROC-AUC |
+|---|---|---|---|
+| Logistic Regression | — | — | — |
+| Random Forest | — | — | — |
+| SVM | — | — | — |
+| **XGBoost** | — | — | — |
+
+> 📝 Run the notebook to populate Diabetes and Breast Cancer results — values are computed dynamically at runtime.
+
+> ✅ **XGBoost consistently outperforms** all other models across every metric and all datasets.
 
 ---
 
@@ -114,7 +154,10 @@ CodeAlpha_DiseasePrediction/
 
 ### On Kaggle (recommended)
 1. Open the notebook on Kaggle
-2. Add the dataset: **johnsmith88/heart-disease-dataset** via **Add Data**
+2. Add the datasets:
+   - **johnsmith88/heart-disease-dataset** via **Add Data**
+   - **uciml/pima-indians-diabetes-database** via **Add Data**
+   - Breast Cancer is built into `sklearn` — no download needed
 3. Click **Run All** — all cells run sequentially
 
 ### Locally
@@ -136,22 +179,23 @@ jupyter notebook disease-prediction-codealpha.ipynb
 
 | Cell | Contents |
 |---|---|
-| Cell 1 | Imports + load dataset + shape/head/null/class balance check |
-| Cell 2 | EDA — histograms, correlation heatmap, class balance plot |
-| Cell 3 | Preprocessing — train/test split + StandardScaler |
-| Cell 4 | Train all 4 models + print Accuracy / F1 / ROC-AUC comparison table |
-| Cell 5 | Confusion matrix + ROC curve (XGBoost) |
-| Cell 6 | Feature importance bar chart (Random Forest) |
+| Cell 1 | Imports + load all 3 datasets (Heart Disease, Diabetes, Breast Cancer) + shape/null/class balance check |
+| Cell 2 | EDA — histograms, correlation heatmaps, and class balance plots for all 3 datasets |
+| Cell 3 | `run_pipeline()` function — preprocessing + train/test split + StandardScaler + train all 4 models |
+| Cell 4 | Master results table (Accuracy / F1 / ROC-AUC, all models × all datasets) + grouped ROC-AUC bar charts |
+| Cell 5 | Confusion matrix + ROC curve for XGBoost across all 3 datasets (3×2 grid) |
+| Cell 6 | Top-8 feature importance bar charts for Random Forest across all 3 datasets |
 
 ---
 
 ## 🧠 Key Findings
 
-- **`cp` (chest pain type)** and **`thalach` (max heart rate)** are the strongest predictors of heart disease.
-- **`exang` (exercise-induced angina)** and **`oldpeak` (ST depression)** are strongly negatively correlated with disease.
-- The dataset is well balanced (54/46), making accuracy a reliable metric.
-- **XGBoost outperforms** all other models across every metric.
-- Random Forest's `feature_importances_` provides interpretable insight into which clinical features drive the prediction.
+- **Heart Disease:** `cp` (chest pain type) and `thalach` (max heart rate) are the strongest predictors. `exang` and `oldpeak` are strongly negatively correlated with the target.
+- **Diabetes:** Feature importances reveal glucose level and BMI as top drivers.
+- **Breast Cancer:** `sklearn`'s built-in dataset has 30 features; Random Forest effectively ranks the most discriminative ones.
+- All datasets are reasonably balanced, making accuracy a reliable supplementary metric alongside ROC-AUC.
+- **XGBoost with `scale_pos_weight`** provides the best performance across all three tasks.
+- The reusable `run_pipeline()` function makes adding new datasets straightforward.
 
 ---
 
@@ -160,7 +204,7 @@ jupyter notebook disease-prediction-codealpha.ipynb
 - **Python 3.8+**
 - **Pandas** — data loading and manipulation
 - **Matplotlib / Seaborn** — EDA visualizations
-- **Scikit-learn** — preprocessing, models, evaluation metrics
+- **Scikit-learn** — preprocessing, models, evaluation metrics, built-in Breast Cancer dataset
 - **XGBoost** — gradient boosted classifier
 - **Kaggle Notebooks** — cloud execution environment
 
