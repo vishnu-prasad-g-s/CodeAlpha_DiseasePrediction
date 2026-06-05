@@ -22,7 +22,7 @@ Predict the possibility of **disease** in a patient based on clinical features �
 |---|---|
 | **Source** | [Kaggle — johnsmith88/heart-disease-dataset](https://www.kaggle.com/datasets/johnsmith88/heart-disease-dataset) |
 | **Kaggle Path** | `/kaggle/input/datasets/johnsmith88/heart-disease-dataset/heart.csv` |
-| **Rows** | 303 patients |
+| **Rows** | 1025 patients |
 | **Features** | 13 clinical features |
 | **Target** | `target` — 0 (no disease), 1 (disease) |
 | **Class balance** | ~54% no disease / ~46% disease |
@@ -110,32 +110,32 @@ Raw Data (3 datasets) → EDA → Preprocessing → Train/Test Split → Model T
 
 | Model | Accuracy | F1-Score | ROC-AUC |
 |---|---|---|---|
-| Logistic Regression | 0.836 | 0.849 | 0.911 |
-| Random Forest | 0.869 | 0.876 | 0.926 |
-| SVM | 0.852 | 0.863 | 0.918 |
-| **XGBoost** | **0.885** | **0.890** | **0.941** |
+| Logistic Regression | 0.810 | 0.831 | 0.930 |
+| **Random Forest** | **1.000** | **1.000** | **1.000** |
+| SVM | 0.927 | 0.930 | 0.977 |
+| **XGBoost** | **1.000** | **1.000** | **1.000** |
 
 ### Diabetes
 
 | Model | Accuracy | F1-Score | ROC-AUC |
 |---|---|---|---|
-| Logistic Regression | — | — | — |
-| Random Forest | — | — | — |
-| SVM | — | — | — |
-| **XGBoost** | — | — | — |
+| Logistic Regression | 0.714 | 0.560 | 0.823 |
+| Random Forest | 0.760 | 0.634 | 0.812 |
+| SVM | 0.753 | 0.635 | 0.792 |
+| **XGBoost** | **0.753** | **0.655** | **0.825** |
 
 ### Breast Cancer
 
 | Model | Accuracy | F1-Score | ROC-AUC |
 |---|---|---|---|
-| Logistic Regression | — | — | — |
-| Random Forest | — | — | — |
-| SVM | — | — | — |
-| **XGBoost** | — | — | — |
+| **Logistic Regression** | **0.982** | **0.986** | **0.995** |
+| Random Forest | 0.956 | 0.966 | 0.994 |
+| **SVM** | **0.982** | **0.986** | **0.995** |
+| XGBoost | 0.947 | 0.959 | 0.992 |
 
-> 📝 Run the notebook to populate Diabetes and Breast Cancer results — values are computed dynamically at runtime.
+> ⚠️ **Random Forest and XGBoost score perfect 1.000 on Heart Disease** — this indicates overfitting on the training data. The Heart Disease dataset (1025 rows) likely contains duplicate or near-duplicate records which leak into the test set.
 
-> ✅ **XGBoost consistently outperforms** all other models across every metric and all datasets.
+> ✅ For **Diabetes**, XGBoost leads with the best F1 (0.655) and ROC-AUC (0.825). For **Breast Cancer**, Logistic Regression and SVM tie at the top (98.2% accuracy, 0.995 ROC-AUC).
 
 ---
 
@@ -190,11 +190,11 @@ jupyter notebook disease-prediction-codealpha.ipynb
 
 ## 🧠 Key Findings
 
-- **Heart Disease:** `cp` (chest pain type) and `thalach` (max heart rate) are the strongest predictors. `exang` and `oldpeak` are strongly negatively correlated with the target.
-- **Diabetes:** Feature importances reveal glucose level and BMI as top drivers.
-- **Breast Cancer:** `sklearn`'s built-in dataset has 30 features; Random Forest effectively ranks the most discriminative ones.
+- **Heart Disease:** `cp` (chest pain type) and `thalach` (max heart rate) are the strongest predictors. `exang` and `oldpeak` are strongly negatively correlated with the target. Random Forest and XGBoost both score a perfect 1.000 — likely due to duplicate records in the 1025-row dataset causing test set leakage.
+- **Diabetes:** XGBoost edges out with the best F1 (0.655) and ROC-AUC (0.825). Overall scores are lower here due to class imbalance (500 vs 268).
+- **Breast Cancer:** Logistic Regression and SVM both achieve 98.2% accuracy and 0.995 ROC-AUC — the highest genuine scores across all datasets. The data is strongly linearly separable, which favours simpler models over XGBoost.
 - All datasets are reasonably balanced, making accuracy a reliable supplementary metric alongside ROC-AUC.
-- **XGBoost with `scale_pos_weight`** provides the best performance across all three tasks.
+- **XGBoost with `scale_pos_weight`** is the best model for Diabetes. Logistic Regression and SVM lead on Breast Cancer. Perfect scores on Heart Disease warrant further investigation for data leakage.
 - The reusable `run_pipeline()` function makes adding new datasets straightforward.
 
 ---
